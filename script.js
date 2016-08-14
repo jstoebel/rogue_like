@@ -115,7 +115,8 @@ var Row = React.createClass({
       case("F"):
         // empty cell
         return (<Empty
-          x={this.props.key}
+          type="empty"
+          x={this.props.id}
           y={i}
           key={i}
           id={i}
@@ -125,7 +126,8 @@ var Row = React.createClass({
       case("E"):
         // wall
         return (<Wall
-          x={this.props.key}
+          type="wall"
+          x={this.props.id}
           y={i}
           key={i}
           id={i}
@@ -134,7 +136,8 @@ var Row = React.createClass({
 
       case("P"):
         return (<Player
-          x={this.props.key}
+          type="player"
+          x={this.props.id}
           y={i}
           key={i}
           id={i}
@@ -147,8 +150,9 @@ var Row = React.createClass({
       var level = Math.floor(Math.random() * 3) + 1 // level between 1 and 3
 
         return (<Monster
+          type="monster"
           level={level}
-          x={this.props.key}
+          x={this.props.id}
           y={i}
           key={i}
           id={i}
@@ -158,7 +162,8 @@ var Row = React.createClass({
       case("B"):
 
         return (<Boss
-          x={this.props.key}
+          type="boss"
+          x={this.props.id}
           y={i}
           key={i}
           id={i}
@@ -168,7 +173,8 @@ var Row = React.createClass({
       case("W"):
 
         return(<Weapon
-          x={this.props.key}
+          type="weapon"
+          x={this.props.id}
           y={i}
           key={i}
           id={i}
@@ -177,7 +183,7 @@ var Row = React.createClass({
 
       case("H"):
         return(<Health
-          x={this.props.key}
+          x={this.props.id}
           y={i}
           key={i}
           id={i}
@@ -190,7 +196,7 @@ var Row = React.createClass({
     var open = cellValue == "F";
 
     return (<Cell
-        x={this.props.key}
+        x={this.props.id}
         y={i}
         open={open}
         key={i}
@@ -215,12 +221,127 @@ var Row = React.createClass({
 
 var Game = React.createClass({
 
+  componentWillMount: function(){
+    document.onkeydown = this.keyHandle;
+  },
+
+  getCell: function(xAway, yAway){
+    // fetches cell given distance from player
+    // xAway(int): the x distance from player
+    // yAway(int): the y distance from player
+
+    var x = this.state.player.loc.x + xAway
+    var y = this.state.player.loc.y + yAway
+
+    var row = this.refs[x];
+    return row.refs[y];
+
+  },
+
+  clearCell: function(x, y){
+
+  },
+
+  keyHandle: function(e){
+
+    var keyCode = e.keyCode;
+    // left arrow 	37
+    // up arrow 	38
+    // right arrow 	39
+    // down arrow 	40
+
+    function _findCell(x, y){
+      // determines which direction player wants to interact in and returns the
+      // cell in that direction.
+      switch(keyCode){
+
+        case(37):
+        //left arrow
+        var neighboorCell = this.getCell(1, 0)
+        break
+
+        case(38):
+        //up arrow
+        var neighboorCell = this.getCell(0, 1)
+        break
+        case(39):
+        // right arrow
+        var neighboorCell = this.getCell(-1, 0)
+        break
+        case(40):
+        // down arrow
+        var neighboorCell = this.getCell(0, -1)
+        break
+      }
+      if(neighboorCell !== undefined){
+        return cell
+      }
+    }
+
+    function interact(cell){
+
+    }
+
+    function bumpintoWall(){
+      console.log("ouch!")
+    }
+
+    function move(emptyCell){
+
+      var x = cell.props.x;
+      var y = cell.props.y;
+    }
+
+    function pickupHealth(healthCell){
+
+    }
+
+    function pickupWeapon(weaponCell){
+
+    }
+
+    function fight(badGuy){
+
+    }
+
+    if([37, 38, 39, 40].indexOf(keyCode) > -1) {
+      e.preventDefault();
+    }
+
+    var cell=
+
+
+  },
+
   getInitialState: function(){
-    // my state should know about each row in the game.
+    // my state should know about each row in the game and the player
+
+    var game = this;
+    // get player's initial loc
+    function getPlayerLoc(gameMap){
+      for(var r=0; r<game.props.gameMap.length; r++){
+        var row = game.props.gameMap[r];
+        for(var c=0; c<row.length; c++){
+          var char = row[c];
+          // console.log(char)
+          if(char == "P"){
+            return {y:r, x:c }
+          }
+        }
+      }
+    }
+
+    var playerLoc = getPlayerLoc();
 
     return {
       rows: this.props.gameMap,
-      // player attrs go here
+      player: {
+        loc: {x: playerLoc.x, y: playerLoc.y},
+        hp: 50,
+        level: 1,
+        weapon: 4,
+        xp: 0
+      }
     }
 
   },
