@@ -2,7 +2,7 @@ var Cell = React.createClass({
 
   render: function(){
 
-    return(<div style={style} className={"cell" + this.props.type }> )
+    return(<div className={"cell " + this.props.type }/> )
 
   } // end render
 
@@ -14,7 +14,7 @@ var Game = React.createClass({
     // generate cell object based on the letter on the map
     // this means that cell state (like monster hit points) are stored here
 
-    var cells = this.state.cellsObjs;
+    var cells = this.state.cellObjs;
     for(var c=0; c<this.props.gameMap.length; c++){
       var cellValue = this.props.gameMap[c];
       var coords = this.coordsFromIdx(c)
@@ -22,7 +22,7 @@ var Game = React.createClass({
         case("F"):
           // empty cell
           var cellObj = {
-            type: "empty"
+            type: "empty",
             x: coords.x,
             y: coords.y
           }
@@ -33,7 +33,7 @@ var Game = React.createClass({
         case("E"):
           // wall
           var cellObj = {
-            type: "wall"
+            type: "wall",
             x: coords.x,
             y: coords.y
           }
@@ -44,7 +44,7 @@ var Game = React.createClass({
         case("P"):
           // player cell
           var cellObj = {
-            type: "player"
+            type: "player",
             x: coords.x,
             y: coords.y
           }
@@ -57,20 +57,20 @@ var Game = React.createClass({
           // pick a level
           var level = Math.floor(Math.random() * 3) + 1 // level between 1 and 3
           var cellObj = {
-            type: "monster"
+            type: "monster",
             x: coords.x,
             y: coords.y,
             level: level,
-            hp: 10 * level}
+            hp: 10 * level
           }
 
           cells.push(cellObj);
           break;
 
         case("B"):
-          var level = 4
+          var level = 4;
           var cellObj = {
-            type: "boss"
+            type: "boss",
             x: coords.x,
             y: coords.y,
             level: level,
@@ -83,7 +83,7 @@ var Game = React.createClass({
         case("W"):
 
           var cellObj = {
-            type: "weapon"
+            type: "weapon",
             x: coords.x,
             y: coords.y,
           }
@@ -94,7 +94,7 @@ var Game = React.createClass({
         case("H"):
 
           var cellObj = {
-            type: "health"
+            type: "health",
             x: coords.x,
             y: coords.y,
           }
@@ -104,7 +104,7 @@ var Game = React.createClass({
       } // end switch
     } // end loop
 
-    this.setState({cellsObjs: cells})
+    this.setState({cellObjs: cells})
 
   },
 
@@ -117,14 +117,26 @@ var Game = React.createClass({
     // fetches cell given the x,y coordinates
 
     var i = this.idxFromCoords(x,y)
-    return this.refs[i]
+    return this.state.cellObjs[i]
   },
 
   clearCell: function(x, y){
+    // cell at x,y is removed and replaced with an emptyCell Object
+
+    var cellObjs = this.state.cellObjs;
+    var idx = this.idxFromCoords;
+    cellObjs[idx] = {
+      type: "empty",
+      x: coords.x,
+      y: coords.y
+    };
+    this.setState({cellObjs: cellObjs});
 
   },
 
   keyHandle: function(e){
+
+    game = this;
 
     var keyCode = e.keyCode;
     // left arrow 	37
@@ -132,36 +144,74 @@ var Game = React.createClass({
     // right arrow 	39
     // down arrow 	40
 
-    function _findCell(x, y){
+    function _findCell(keyCode){
       // determines which direction player wants to interact in and returns the
       // cell in that direction.
+      var playerX = this.state.player.loc.x;
+      var playerY = this.state.player.loc.y
       switch(keyCode){
 
         case(37):
           //left arrow
-          var neighboorCell = this.getCell(1, 0)
+          var cell = this.getCell(playerX + 1, playerY)
           break
 
         case(38):
           //up arrow
-          var neighboorCell = this.getCell(0, 1)
+          var cell = this.getCell(playerX, playerY + 1)
           break
         case(39):
           // right arrow
-          var neighboorCell = this.getCell(-1, 0)
+          var cell = this.getCell(playerX -1, playerY)
           break
         case(40):
           // down arrow
-          var neighboorCell = this.getCell(0, -1)
+          var cell = this.getCell(playerX, playerY -1)
           break
       }
-      if(neighboorCell !== undefined){
-        return cell
-      }
+      if(cell !== undefined){return cell;}
     }
 
     function interact(cell){
       // calls the appropriate function to interact with the cell
+
+      switch(cell.type){
+
+        case("empty"):
+          moveTo(cell);
+          break;
+        case("wall"):
+          bumpintoWall();
+          break;
+        case("monster"):
+          fight(cell);
+          break;
+        case("boss"):
+          fight(cell);
+          break;
+        case("weapon"):
+          pickupWeapon(cell);
+          break;
+        case("health"):
+          pickupHealth(cell);
+          break;
+      }
+
+    }
+
+    function moveTo(emptyCell){
+      // change player state to location of emptyCell
+      // emptyCell(cellObj)
+
+      // clear the player object from the old spot.
+      // replace the emptyCell with a playerObject
+
+      cellObjs = game.state.cellObjs;
+      game.clearCell(game.state.player.loc.x, game.state.player.loc.y);
+      var newIdx = this.idxFromCoords(emptyCell.x, emptyCell.y);
+      cellObjs[newIdx] = {type: "player",
+        x: coords.x,
+        y: coords.y}
 
     }
 
@@ -169,21 +219,13 @@ var Game = React.createClass({
       console.log("ouch!")
     }
 
-    function move(emptyCell){
-
-      var x = cell.props.x;
-      var y = cell.props.y;
-    }
-
-    function pickupHealth(healthCell){
+    function fight(badGuy){
 
     }
-
     function pickupWeapon(weaponCell){
 
     }
-
-    function fight(badGuy){
+    function pickupHealth(healthCell){
 
     }
 
@@ -197,7 +239,7 @@ var Game = React.createClass({
     // returns x,y coordinates based on an index
     var x = gameMap.length % i;
     var gridSide = Math.sqrt(gameMap.length)
-    var y = Math.floor(c / gridSide);
+    var y = Math.floor(i / gridSide);
     return({x:x, y:y})
   },
 
@@ -207,13 +249,13 @@ var Game = React.createClass({
     var gridSide = Math.sqrt(this.state.gameMap.length)
     return (x * gridSide) + y
 
-  }
+  },
 
   getInitialState: function(){
     // get player's initial loc
 
     var game = this;
-    function getPlayerLoc(gameMap, game){
+    function getPlayerLoc(gameMap){
 
       for(var i=0; i<gameMap.length; i++){
         var char = gameMap[i];
@@ -222,10 +264,10 @@ var Game = React.createClass({
 
     }
 
-    var playerLoc = getPlayerLoc();
+    var playerLoc = getPlayerLoc(this.props.gameMap);
 
     return {
-      cellsObjs: [],  // an array of objects representing a cell
+      cellObjs: [],  // an array of objects representing a cell
       player: {
         loc: {x:playerLoc.x, y:playerLoc.y},
         hp: 50,
@@ -239,95 +281,21 @@ var Game = React.createClass({
 
   eachCell: function(cellObj, i, arr){
     // contructs a cell based on its value.
-        switch(cellObj.type){
 
-          case("empty"):
-            // empty cell
-            return (<Empty
-              type="empty"
-              x={cellObj.x}
-              y={cellObj.y}
-              key={i}
-              id={i}
-              ref={i}
-              />)
-
-          case("wall"):
-            // wall
-            return (<Wall
-              type="wall"
-              x={cellObj.x}
-              y={cellObj.y}
-              key={i}
-              id={i}
-              ref={i}
-              />)
-
-          case("player"):
-            return (<Player
-              type="player"
-              x={cellObj.x}
-              y={cellObj.y}
-              key={i}
-              id={i}
-              ref={i}
-              />)
-
-          case("monster"):
-
-          // pick a level
-          var level = Math.floor(Math.random() * 3) + 1 // level between 1 and 3
-
-            return (<Monster
-              type="monster"
-              level={level}
-              x={this.props.id}
-              y={i}
-              key={i}
-              id={i}
-              ref={i}
-              />)
-
-          case("boss"):
-
-            return (<Boss
-              type="boss"
-              x={this.props.id}
-              y={i}
-              key={i}
-              id={i}
-              ref={i}
-              />)
-
-          case("weapon"):
-
-            return(<Weapon
-              type="weapon"
-              x={this.props.id}
-              y={i}
-              key={i}
-              id={i}
-              ref={i}
-              />)
-
-          case("health"):
-            return(<Health
-              x={this.props.id}
-              y={i}
-              key={i}
-              id={i}
-              ref={i}
-              />)
-
-        }
-
+      return (
+        <Cell
+          type={cellObj.type}
+          x={cellObj.x}
+          y={cellObj.y}
+          key={i}
+          id={i}
+          ref={i} />)
   },
 
   render: function(){
-    console.log("render game!")
     return (
       <div className="game">
-        {this.state.cellsObjs.map(this.eachCell)}
+        {this.state.cellObjs.map(this.eachCell)}
       </div>
     )
   }
