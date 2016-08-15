@@ -74,6 +74,46 @@ var Health = React.createClass({
 })
 
 
+var Cell = React.createClass({
+
+
+
+  render: function(){
+
+
+    // PRETTY SURE THIS CAN BE DELETED
+    // var style = {}
+    // switch(this.props.type){
+    //
+    //   case("empty"):
+    //     style["backgroundColor"] = "white";
+    //     break;
+    //   case("wall"):
+    //     style["backgroundColor"] = "black";
+    //     break;
+    //   case("player"):
+    //     style["backgroundColor"] = "blue";
+    //     break;
+    //   case("monster"):
+    //     style["backgroundColor"] = "red";
+    //     break;
+    //   case("boss"):
+    //     style["backgroundColor"] = "purple";
+    //     break;
+    //   case("weapon"):
+    //     style["backgroundColor"] = "orange";
+    //     break;
+    //   case("weapon"):
+    //     style["backgroundColor"] = "green";
+    //     break;
+    // } // end switcheroo
+
+    return(<div style={style} className={"cell" + this.props.type }> )
+
+  } // end render
+
+})
+
 var Game = React.createClass({
 
   componentWillMount: function(){
