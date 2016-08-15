@@ -17,11 +17,10 @@ def assign_stuff(dungeon, ltr, count):
     """
 
     for i in range(count):
-        row = random.choice(dungeon)
         while True:  # find an empty spot to place it
-            idx = random.randint(0, len(row)-1)
-            if row[idx] == "F":
-                row[idx] = ltr
+            idx = random.randint(0, len(dungeon)-1)
+            if dungeon[idx] == "F":
+                dungeon[idx] = ltr
                 break
     return dungeon
 
@@ -29,15 +28,14 @@ with open('map.csv', 'r') as map_file:
     csv_reader = csv.reader(map_file)
     dungeon = []
     for row in csv_reader:
-        new_row = []
-        for char in row:
-            new_row.append(char)
-        dungeon.append(new_row)
+        dungeon += row
 
+assert len(dungeon) == 50 ** 2
 
 
 for key in things:
     dungeon = assign_stuff(dungeon, key, things[key])
+    assert key in dungeon
 
 with open('map.json', 'w+') as writer:
         json.dump(dungeon, writer)
