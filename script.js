@@ -159,26 +159,31 @@ var Game = React.createClass({
       switch(keyCode){
 
         case(37):
-          //left arrow: y + 1
+          //left arrow
           console.log("left key!")
-          var cell = game.getCell(playerX - 1 , playerY)
-          break
+          // x can't be 0
+          if(playerX > 0){var cell = game.getCell(playerX - 1 , playerY)}
+          break;
 
         case(38):
-          //up arrow: x - 1
+          //up arrow
           console.log("up key!")
-          var cell = game.getCell(playerX, playerY - 1)
-          break
+          if(playerY>0){var cell = game.getCell(playerX, playerY - 1)}
+          break;
         case(39):
-          // right arrow: y -1
+          // right arrow
           console.log("right key!")
-          var cell = game.getCell(playerX + 1, playerY)
-          break
+          if(playerX<Math.sqrt(game.props.gameMap.length) -1 ){
+            var cell = game.getCell(playerX + 1, playerY)
+          }
+          break;
         case(40):
-          // down arrow x + 1
+          // down arrow
           console.log("down key!")
-          var cell = game.getCell(playerX, playerY + 1)
-          break
+          if(playerY <Math.sqrt(game.props.gameMap.length) - 1){
+            var cell = game.getCell(playerX, playerY + 1)
+          }
+          break;
       }
       if(cell !== undefined){return cell;}
     }
