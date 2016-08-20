@@ -1,375 +1,463 @@
+
+
 var Cell = React.createClass({
-  // props
-  // x(int): x coordinate 0-99
-  // y(int): y coordinate 0-99
-  //open(bool): if the cell is open (player can move to it.)
-
-  getInitialState: function(){
-      return({open: this.props.open});
-  },
 
   render: function(){
 
-    var style = {"backgroundColor" : this.props.open ? "white" : "black"}
-    if(this.props.x == 10 && this.props.y == 10) {
-      style["backgroundColor"] = 'red';
-    }
-    return (
-      <div className="cell"
-        style={style}
-      >
-      </div>
-    )
-  }
+    return(<div className={"cell " + this.props.type }/> )
 
-})
-
-//ALL OF THE THINGS THAT CAN GO IN A CELL
-
-var Wall = React.createClass({
-
-  render: function(){
-    return (<div className="cell wall-cell" />)
-  }
-})
-
-var Empty = React.createClass({
-
-  render: function(){
-    return (<div className="cell empty-cell" />)
-  }
-})
-
-var Player = React.createClass({
-
-  // NOTE: player attributes will not be stored here! They will be kept in the game component.
-
-  render: function(){
-    return (<div className="cell player-cell" />)
-  }
-
-})
-
-var Monster = React.createClass({
-  // recives props:
-    //level (1-3)
-    // hp (10 * level)
-
-  getInitialState: function(){
-
-    return {hp: 10 * this.props.level}
-  },
-
-  render: function(){
-    return (<div className="cell monster-cell" />)
-  }
-
-})
-
-var Boss = React.createClass({
-  // recives props:
-    //level (1-3)
-    // hp (10 * level)
-
-  getInitialState: function(){
-
-    return {level: 4, hp: 40}
-  },
-
-  render: function(){
-    return (<div className="cell boss-cell" />)
-  }
-
-})
-
-var Weapon = React.createClass({
-
-  //shhh... weapons don't actually have a damage prop. Instead the players
-  // current weapon is simply upgraded.
-
-  render: function(){
-
-    return(<div className="cell weapon-cell" />)
-  }
-})
-
-var Health = React.createClass({
-
-  render: function(){
-    return(<div className="cell health-cell" />)
-  }
-
-})
-
-var Row = React.createClass({
-
-  getInitialState: function(){
-    // my state should know about each cell in my row.
-    return {row: this.props.row}
-  },
-
-  eachCell: function(cellValue, i, arr){
-
-    switch(cellValue){
-
-      case("F"):
-        // empty cell
-        return (<Empty
-          type="empty"
-          x={this.props.id}
-          y={i}
-          key={i}
-          id={i}
-          ref={i}
-          />)
-
-      case("E"):
-        // wall
-        return (<Wall
-          type="wall"
-          x={this.props.id}
-          y={i}
-          key={i}
-          id={i}
-          ref={i}
-          />)
-
-      case("P"):
-        return (<Player
-          type="player"
-          x={this.props.id}
-          y={i}
-          key={i}
-          id={i}
-          ref={i}
-          />)
-
-      case("M"):
-
-      // pick a level
-      var level = Math.floor(Math.random() * 3) + 1 // level between 1 and 3
-
-        return (<Monster
-          type="monster"
-          level={level}
-          x={this.props.id}
-          y={i}
-          key={i}
-          id={i}
-          ref={i}
-          />)
-
-      case("B"):
-
-        return (<Boss
-          type="boss"
-          x={this.props.id}
-          y={i}
-          key={i}
-          id={i}
-          ref={i}
-          />)
-
-      case("W"):
-
-        return(<Weapon
-          type="weapon"
-          x={this.props.id}
-          y={i}
-          key={i}
-          id={i}
-          ref={i}
-          />)
-
-      case("H"):
-        return(<Health
-          x={this.props.id}
-          y={i}
-          key={i}
-          id={i}
-          ref={i}
-          />)
-
-
-    }
-
-    var open = cellValue == "F";
-
-    return (<Cell
-        x={this.props.id}
-        y={i}
-        open={open}
-        key={i}
-        id={i}
-        ref={i}
-      />
-    )
-  },
-
-  render: function(){
-
-    return (
-      <div className="cell-row">
-        {this.props.row.map(this.eachCell)}
-      </div>
-    )
-
-  }
-
+  } // end render
 
 })
 
 var Game = React.createClass({
 
+
+  randomBetween: function(min, max){
+    return Math.floor(Math.random() * max) + min
+  },
+
   componentWillMount: function(){
+    // generate cell object based on the letter on the map
+    // this means that cell state (like monster hit points) are stored here
+
+    var cells = this.state.cellObjs;
+    for(var c=0; c<this.props.gameMap.length; c++){
+      var cellValue = this.props.gameMap[c];
+      var coords = this.coordsFromIdx(c)
+      switch(cellValue){
+        case("F"):
+          // empty cell
+          var cellObj = {
+            type: "empty",
+            x: coords.x,
+            y: coords.y
+          }
+
+          cells.push(cellObj);
+          break;
+
+        case("E"):
+          // wall
+          var cellObj = {
+            type: "wall",
+            x: coords.x,
+            y: coords.y
+          }
+
+          cells.push(cellObj);
+          break;
+
+        case("P"):
+          // player cell
+          var cellObj = {
+            type: "player",
+            x: coords.x,
+            y: coords.y
+          }
+
+          cells.push(cellObj);
+          break;
+
+        case("M"):
+
+          // pick a level
+          var level = this.randomBetween(1, 3)
+          var cellObj = {
+            type: "monster",
+            x: coords.x,
+            y: coords.y,
+            level: level,
+            hp: 10 * level
+          }
+
+          cells.push(cellObj);
+          break;
+
+        case("B"):
+          var level = 4;
+          var cellObj = {
+            type: "boss",
+            x: coords.x,
+            y: coords.y,
+            level: level,
+            hp: 10 * level
+          }
+
+          cells.push(cellObj);
+          break;
+
+        case("W"):
+
+          var cellObj = {
+            type: "weapon",
+            x: coords.x,
+            y: coords.y,
+          }
+
+          cells.push(cellObj);
+          break;
+
+        case("H"):
+
+          var cellObj = {
+            type: "health",
+            x: coords.x,
+            y: coords.y,
+          }
+
+          cells.push(cellObj);
+          break;
+      } // end switch
+    } // end loop
+
+    this.setState({cellObjs: cells})
+
+  },
+
+  componentDidMount: function(){
+    // attach key handler
     document.onkeydown = this.keyHandle;
   },
 
-  getCell: function(xAway, yAway){
-    // fetches cell given distance from player
-    // xAway(int): the x distance from player
-    // yAway(int): the y distance from player
+  getCell: function(x, y){
+    // fetches cellObj given the x,y coordinates
 
-    var x = this.state.player.loc.x + xAway
-    var y = this.state.player.loc.y + yAway
-
-    var row = this.refs[x];
-    return row.refs[y];
-
+    var i = this.idxFromCoords(x,y)
+    return this.state.cellObjs[i]
   },
 
   clearCell: function(x, y){
+    // cell at x,y is removed and replaced with an emptyCell Object
+
+    var state = this.state;
+    var idx = this.idxFromCoords(x, y)
+    state.cellObjs[idx] = {
+      type: "empty",
+      x: x,
+      y: y
+    };   // replace the player's loc with an empty array
+
+    this.setState(state);
+
+  },
+
+  gainXp: function(xp){
+    var state = this.state;
+    state.player.xp += xp;
+    state.player.level = Math.floor(state.player.xp / 100) + 1
+    this.setState(state);
+  },
+
+  changeHealth: function(health){
+    var state = this.state;
+    state.player.health += health;
+    this.setState(state);
+  },
+
+  damageClasses: function(){
+    return [4, 6, 8, 10, 12, 20] // the standard D&D dice values
+  },
+
+  upgradeWeapon: function(){
+    var damages = this.damageClasses()
+    var state = this.state;
+    var currentDamage = state.player.weapon;
+
+    var idx = damages.indexOf(currentDamage)
+    if(currentDamage < damages[damages.length - 1]){
+      state.player.weapon = damages[idx + 1]
+    }
 
   },
 
   keyHandle: function(e){
 
     var keyCode = e.keyCode;
+    if([37, 38, 39, 40].indexOf(keyCode) > -1) {
+      e.preventDefault();
+    }
+    var game = this;
+
     // left arrow 	37
     // up arrow 	38
     // right arrow 	39
     // down arrow 	40
 
-    function _findCell(x, y){
+    function _findCell(keyCode){
       // determines which direction player wants to interact in and returns the
       // cell in that direction.
+      var playerX = game.state.player.loc.x;
+      var playerY = game.state.player.loc.y
       switch(keyCode){
 
         case(37):
-        //left arrow
-        var neighboorCell = this.getCell(1, 0)
-        break
+          //left arrow
+          // x can't be 0
+          if(playerX > 0){var cell = game.getCell(playerX - 1 , playerY)}
+          break;
 
         case(38):
-        //up arrow
-        var neighboorCell = this.getCell(0, 1)
-        break
+          //up arrow
+          if(playerY>0){var cell = game.getCell(playerX, playerY - 1)}
+          break;
         case(39):
-        // right arrow
-        var neighboorCell = this.getCell(-1, 0)
-        break
+          // right arrow
+          if(playerX<Math.sqrt(game.props.gameMap.length) -1 ){
+            var cell = game.getCell(playerX + 1, playerY)
+          }
+          break;
         case(40):
-        // down arrow
-        var neighboorCell = this.getCell(0, -1)
-        break
+          // down arrow
+          if(playerY <Math.sqrt(game.props.gameMap.length) - 1){
+            var cell = game.getCell(playerX, playerY + 1)
+          }
+          break;
       }
-      if(neighboorCell !== undefined){
-        return cell
-      }
+      if(cell !== undefined){return cell;}
     }
 
     function interact(cell){
+      // calls the appropriate function to interact with the cell
 
+      switch(cell.type){
+
+        case("empty"):
+          moveTo(cell);
+          break;
+        case("wall"):
+          bumpintoWall();
+          break;
+        case("monster"):
+          fight(cell);
+          break;
+        case("boss"):
+          fight(cell);
+          break;
+        case("weapon"):
+          pickupWeapon(cell);
+          moveTo(cell)
+          break;
+        case("health"):
+          pickupHealth(cell);
+          moveTo(cell)
+          break;
+      }
+
+    }
+
+    function moveTo(emptyCell){
+      // change player state to location of emptyCell
+      // emptyCell(cellObj)
+
+      var cellObjs = game.state.cellObjs;
+      var oldX = game.state.player.loc.x;
+      var oldY = game.state.player.loc.y;
+      var playerIdx = game.idxFromCoords(oldX, oldY);
+      var player = cellObjs[playerIdx];  //pull the player out of the array
+
+      game.clearCell(oldX, oldY)
+
+      var newX = emptyCell.x;
+      var newY = emptyCell.y
+      var newIdx = game.idxFromCoords(newX, newY);  //insert player into new spot
+      cellObjs[newIdx] = player;
+
+      var state = game.state;
+      state.player.loc.x = newX;
+      state.player.loc.y = newY
+      game.setState(state)
     }
 
     function bumpintoWall(){
       console.log("ouch!")
     }
 
-    function move(emptyCell){
-
-      var x = cell.props.x;
-      var y = cell.props.y;
-    }
-
-    function pickupHealth(healthCell){
-
-    }
-
-    function pickupWeapon(weaponCell){
-
-    }
-
     function fight(badGuy){
+      // player rolls to do damage to bad guy
+        // if bad guy is out of hp, clear from map
+      // bad guy rolls to do damage to player
+        // is player is out of hp, game over
+
+        function _playerAttack(badGuy){
+
+          var state = game.state;
+          // player does damage to the bad guy.
+          // returns true if the bad guy is dead.
+
+          // deal damage to bad guy
+          var playerDamage = game.randomBetween(1, game.state.player.weapon + game.state.player.level)
+          badGuy.hp -= playerDamage;
+          if (badGuy.hp <= 0) {
+
+            // player wins!
+            console.log("monster vanquished!");
+            game.clearCell(badGuy.x, badGuy.y);
+            // gain xp
+            game.gainXp(badGuy.level * 10);
+            return true
+          } else {
+            // put monster back in cellObjs
+            var badGuyIdx = game.idxFromCoords(badGuy.x, badGuy.y)
+            state.cellObjs[badGuyIdx] = badGuy;
+            game.setState(state)
+            return false
+          }
+        }
+
+        function _badGuyAttack(){
+
+            var badGuyWeapon = game.damageClasses()[badGuy.level];
+            var badGuyDamage = game.randomBetween(1, badGuyWeapon);
+            // state.player.health -= badGuyDamage;
+            game.changeHealth(-badGuyDamage)
+            if (game.state.player.health <= 0) {
+              // game over!
+              console.log("game over!")
+              //TODO
+            }
+            // game.setState(state)
+        }
+
+      var result = _playerAttack(badGuy);
+      if(!result){_badGuyAttack();}
+
 
     }
+    function pickupWeapon(weaponCell){
+      console.log("hey there's a weapon!")
 
-    if([37, 38, 39, 40].indexOf(keyCode) > -1) {
-      e.preventDefault();
+      game.upgradeWeapon();
+      game.clearCell(weaponCell);
+
+    }
+    function pickupHealth(healthCell){
+      // pick up the health pack.
+      // add to heealth
+      // clear cell
+      // move to cell
+      game.changeHealth(10)
+      game.clearCell(healthCell.x, healthCell.y)
     }
 
-    var cell=
-
+    var cellObj = _findCell(keyCode)
+    if(cellObj !== null){interact(cellObj);}
 
   },
 
-  getInitialState: function(){
-    // my state should know about each row in the game and the player
+  coordsFromIdx: function(i){
+    // returns x,y coordinates based on an index
 
-    var game = this;
+    var width = Math.sqrt(this.props.gameMap.length);
+    var x = i % width;
+    var y = Math.floor(i / width);
+    return({x:x, y:y})
+  },
+
+  idxFromCoords: function(x,y){
+    // returns an index from x,y cordinates
+
+    var gridSide = Math.sqrt(this.props.gameMap.length)
+    return (y *  gridSide) + x
+
+  },
+
+
+  getInitialState: function(){
     // get player's initial loc
+    var game = this;
     function getPlayerLoc(gameMap){
-      for(var r=0; r<game.props.gameMap.length; r++){
-        var row = game.props.gameMap[r];
-        for(var c=0; c<row.length; c++){
-          var char = row[c];
-          // console.log(char)
-          if(char == "P"){
-            return {y:r, x:c }
-          }
-        }
+
+      for(var i=0; i<gameMap.length; i++){
+        var char = gameMap[i];
+        if(char == "P"){return game.coordsFromIdx(i)}
       }
+
     }
 
-    var playerLoc = getPlayerLoc();
+    var playerLoc = getPlayerLoc(this.props.gameMap);
 
     return {
-      rows: this.props.gameMap,
+      cellObjs: [],  // an array of objects representing a cell
       player: {
-        loc: {x: playerLoc.x, y: playerLoc.y},
+        loc: {x:playerLoc.x, y:playerLoc.y},
         hp: 50,
         level: 1,
         weapon: 4,
-        xp: 0
+        xp: 0,
+        health: 100
       }
     }
 
   },
 
-  eachRow: function(row, i, arr){
-    // contructs a cellRow with the following props
+  eachCell: function(cellObj, i, arr){
+    // contructs a cell based on its value.
 
-    return (
-      <Row
-        row={row}
-        key={i}
-        id={i}
-        ref={i}
-      />
-    )
-
+      return (
+        <Cell
+          type={cellObj.type}
+          x={cellObj.x}
+          y={cellObj.y}
+          key={i}
+          id={i}
+          ref={i} />)
   },
 
   render: function(){
-    console.log("render game!")
+    // console.log(this.state.player.loc.x+ ", " + this.state.player.loc.y)
     return (
       <div className="game">
-        {this.state.rows.map(this.eachRow)}
+        <ul className="list-inline dashboard text-center">
+          <li>Health: {this.state.player.health}</li>
+          <li>Attack: {this.state.player.weapon}</li>
+          <li>Level: {this.state.player.level}</li>
+          <li>XP: {this.state.player.xp}</li>
+        </ul>
+        {this.state.cellObjs.map(this.eachCell)}
       </div>
     )
   }
 
 })
 
-var gameMap = [["E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E"], ["E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "H", "F", "E", "E", "E", "E", "E", "E", "E", "E"], ["E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "F", "W", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "H", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E"], ["E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "H", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E"], ["E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "E", "F", "E", "F", "M", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E"], ["E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "M", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "E"], ["E", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E"], ["E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "F", "E", "E"], ["E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "F", "E", "E"], ["E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "E", "E"], ["E", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "E", "E"], ["E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "F", "F"], ["E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F"], ["E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F"], ["E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "E", "E", "E", "F", "E", "F", "F", "W", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F"], ["E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "F", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F"], ["E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "F", "H", "F", "F", "F", "F", "E", "F", "E", "F"], ["E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F"], ["E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F"], ["E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "F", "E", "F"], ["E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "E", "M", "F", "F", "E", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "F", "E", "F"], ["E", "E", "E", "E", "E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "F", "F", "F"], ["E", "E", "E", "E", "E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E"], ["E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F"], ["E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "E", "E", "F"], ["E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "B", "F", "E", "F", "F", "M", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "E", "E", "F"], ["E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "E", "E", "F"], ["E", "F", "F", "H", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F"], ["E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "F", "E", "F"], ["E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "E", "F"], ["E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F"], ["E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "M", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "E", "F"], ["E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "H", "F", "E", "F", "E", "E", "E", "E", "E", "H", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F"], ["E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F"], ["E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "F", "W", "F", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "W", "F", "F", "E", "F", "E", "F", "E", "F"], ["E", "F", "M", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "M", "F", "F", "F", "E", "F", "E", "F", "E", "F"], ["E", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "E", "E", "H", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F"], ["E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "F", "F", "H", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F"], ["E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F"], ["E", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F"], ["E", "F", "F", "M", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F"], ["E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "M", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F"], ["E", "F", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "H"], ["E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F"], ["E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "E", "E", "M", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E"], ["E", "F", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "E"], ["E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "W", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "P", "E", "F", "E", "E"], ["E", "F", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E"], ["E", "F", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E"], ["E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "E", "E"]]
+var starterMap = ["E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "F", "P", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "F", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "F", "E", "F", "F", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "F", "F", "F", "F", "E", "F", "E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "E", "E", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "F", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "F", "F", "F", "E", "F", "E", "F", "F", "F", "F", "F", "E", "E", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "F", "E", "E", "E", "F", "E", "E", "E", "E", "E", "E", "E", "E", "E", "F", "E", "F", "E", "E", "E", "E", "E", "E", "E", "F", "E", "E", "E", "F", "E", "E", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "E", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "E", "E", "E", "E", "E", "E", "E", "F", "F", "F", "F", "F", "E", "E"]
+
+function placeStuff(map, thing){
+  // randomly place monsters, boss and items on the map
+  // return the populated map
+  var things = {
+  'M' : 10,
+  'B' : 1,
+  'W' : 5,
+  'H' : 10,
+  }
+
+  var dungeon = map.slice()
+
+  for(thing in things){
+    var qty = things[thing];
+    for(var i=0; i<qty; i++){
+
+      while(true){
+        var idx = Math.floor(Math.random() * map.length - 1) + 0
+        if(map[idx] == "F"){
+          dungeon[idx] = thing;
+          break;
+
+        }
+      }
+    }
+  }
+  return dungeon
+
+
+}
+
+// var gameMap = ["P", "F", "F", "F", "F", "F", "F", "F", "F"]
+// console.log(gameMap.indexOf("P"))
+
+var gameMap = placeStuff(starterMap);
+
+console.log(gameMap.length)
 React.render(<Game gameMap={gameMap} />, document.getElementById('game-container'));
