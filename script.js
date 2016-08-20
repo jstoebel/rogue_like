@@ -3,8 +3,8 @@
 var Cell = React.createClass({
 
   render: function(){
-
-    return(<div className={"cell " + this.props.type }/> )
+    var bOut = this.props.blackOut ? " blackout " : ""
+    return(<div className={"cell " + this.props.type + bOut }/> )
 
   } // end render
 
@@ -362,6 +362,12 @@ var Game = React.createClass({
 
   },
 
+  distance: function(x1, y1, x2, y2){
+    // returns the distance from cell1 to cell2
+    var xs = Math.pow(x2 - x1, 2)
+    var ys = Math.pow(y2 - y1, 2)
+    return Math.sqrt(xs + ys)
+  },
 
   getInitialState: function(){
     // get player's initial loc
@@ -372,7 +378,6 @@ var Game = React.createClass({
         var char = gameMap[i];
         if(char == "P"){return game.coordsFromIdx(i)}
       }
-
     }
 
     var playerLoc = getPlayerLoc(this.props.gameMap);
@@ -394,18 +399,31 @@ var Game = React.createClass({
   eachCell: function(cellObj, i, arr){
     // contructs a cell based on its value.
 
+      // var playerX = this.state.player.loc.x
+      // var playerY = this.state.player.loc.y
+      // var fromPlayer = this.distance(playerX, playerY, cellObj.x, cellObj.y)
+
+      //cell is shown if both x and y are within 5 from playerX
+
+
+      var xDistance = Math.abs(this.state.player.loc.x - cellObj.x)
+      var yDistance = Math.abs(this.state.player.loc.y - cellObj.y)
+
+      var inside = xDistance < 5 && yDistance < 5 || cellObj.type == "player"
+
       return (
         <Cell
           type={cellObj.type}
           x={cellObj.x}
           y={cellObj.y}
+          blackOut={!inside}
           key={i}
           id={i}
           ref={i} />)
   },
 
   render: function(){
-    // console.log(this.state.player.loc.x+ ", " + this.state.player.loc.y)
+
     return (
       <div className="game">
         <ul className="list-inline dashboard text-center">
@@ -454,8 +472,7 @@ function placeStuff(map, thing){
 
 }
 
-// var gameMap = ["P", "F", "F", "F", "F", "F", "F", "F", "F"]
-// console.log(gameMap.indexOf("P"))
+// var starterMap = ["P", "F", "F", "F", "F", "F", "F", "F", "F"]
 
 var gameMap = placeStuff(starterMap);
 
